@@ -18,11 +18,14 @@ struct processNode {
     struct processNode *next;
 };
 
+
 struct processLogNode {
     int pid;
     int arrival_time;
     int waiting_time;
     int num_bursts;
+    int first_time;
+    int last_time;
     int turnaround_time;
     int status; // 0: not arrived yet , 1: ready , 2: running , 3: blocked (IO), 4: completed
 };
@@ -88,7 +91,9 @@ int find_next(struct processNode** proc, char itype) {
             least_bt_ind = r;
         }
     }
-    printf("At time %d , shortest job pid: %d , with burst %d\n", time, least_bt_ind, least_bt);
+    // if(least_bt_ind != -1){
+    //     printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, itype, least_bt_ind, least_bt);
+    // }
     return least_bt_ind;
 }
 
@@ -141,6 +146,8 @@ int main(int argc, char *argv[])
         processLog[j].arrival_time = arrival;
         processLog[j].waiting_time = 0;
         processLog[j].turnaround_time = -1;
+        processLog[j].first_time = -1;
+        processLog[j].last_time = -1;
         processLog[j].status = 0;       // 0: not arrived yet , 1: ready , 2: running , 3: blocked (IO), 4: completed
         int n = 0;                                          // we will count this soon
         int temp = 0;
@@ -174,39 +181,45 @@ int main(int argc, char *argv[])
     time = 0;
     // find_next(proc, 'C');
     while(!done){
+        int flag_pid = -1;
         if(cpu.idle){
             // select next process to run
             
             int pid_next = find_next(proc, 'C');
             if(pid_next == -1){
-                printf("No CPU processes waiting ...\n");
+                printf("No CPU processes waiting at time %d ...\n", time);
                 break;
+            }
+            if(pid_next != -1){
+                printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, 'C', pid_next, proc[pid_next]->val);
             }
             cpu.curr_pid = pid_next;
             cpu.idle = 0;
             cpu.time_left = proc[pid_next]->val;
             processLog[pid_next].status = 2; // running
 
-            // delete the node from the LL
-            // struct processNode *ptr = malloc(sizeof(struct processNode));
-            // ptr = proc[pid_next];
-
-            proc[pid_next] = proc[pid_next]->next;
+            // delete the node from the LL, and check if process first time. if yes, calc response time
+            if(processLog[pid_next].first_time == -1){
+                processLog[pid_next].first_time = time; // time when process first gets cpu time
+                printf("First time process %d got cpu is %d\n", pid_next, time);
+            }
             
-            // free(ptr);
-
+            proc[pid_next] = proc[pid_next]->next;
+            flag_pid = pid_next; // pid at which cpu stuff just happened
+            
             // update whatever happened in this 1 time unit
             cpu.time_left--;
             // printf("%d\n", cpu.time_left);
 
             if(cpu.time_left == 0) { // very rare case
                 cpu.idle = 1;
-                processLog[pid_next].status = 4; // done
-                processLog[pid_next].turnaround_time = 1;
+                // processLog[pid_next].status = 4; // done
+                // processLog[pid_next].turnaround_time = 1;
             }
         } else {
             // increment waiting time of all arrived processes
             update(proc);
+            flag_pid = cpu.curr_pid;
             // progress current process in cpu by 1 time unit
             if(cpu.time_left == 1){
                 cpu.idle = 1;                           // cpu relinquished
@@ -220,11 +233,44 @@ int main(int argc, char *argv[])
         
         if(ioDevice.idle){
             // select next io process to run
-        } else {
-            // increment waiting time (this should be a rather rare occurrence)
-            // progress current process in io by 1 time unit
-        }
+            int pid_next = find_next(proc, 'I');
+            if(pid_next == -1 || pid_next == flag_pid){
+                // printf("No IO processes waiting at time %d ...\n", time);
+            } else {
+                if(pid_next != -1){
+                    printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, 'I', pid_next, proc[pid_next]->val);
+                }
+                ioDevice.curr_pid = pid_next;
+                ioDevice.idle = 0;
+                ioDevice.time_left = proc[pid_next]->val;
+                processLog[pid_next].status = 3; // blocked for io
 
+                // delete the node from the LL
+                proc[pid_next] = proc[pid_next]->next;
+                
+
+                // update whatever happened in this 1 time unit
+                ioDevice.time_left--;
+                // printf("%d\n", ioDevice.time_left);
+
+                if(ioDevice.time_left == 0) { // common
+                    ioDevice.idle = 1;
+                    // processLog[pid_next].status = 4; // done
+                    // processLog[pid_next].turnaround_time = 1;
+                } 
+            }
+        } else {
+            if(ioDevice.time_left == 1){
+                ioDevice.idle = 1;                           // io relinquished
+                processLog[ioDevice.curr_pid].status = 1;    // process ready
+                // save turnaround time
+                // processLog[cpu.curr_pid].turnaround_time = time - processLog[cpu.curr_pid].arrival_time + 1;
+                // printf("%d\n", processLog[cpu.curr_pid].turnaround_time);
+            }
+            ioDevice.time_left--;
+        }
+        
+        flag_pid = -1;
         time++;
     }
 
