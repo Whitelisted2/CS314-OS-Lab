@@ -78,6 +78,8 @@ void insert_node(struct processNode **head, int ival, char itype)
 int find_next(struct processNode** proc, char itype) {
     int least_bt = INT_MAX;
     int least_bt_ind = -1;
+    // int second_bt = INT_MAX;
+    // int second_bt_ind = -1;
     // go through all processes
     for(int r=0; r<j; r++){
         if(processLog[r].arrival_time > time){ // since we're given that the arrival times are in non-descending order
@@ -87,10 +89,16 @@ int find_next(struct processNode** proc, char itype) {
             continue;
         }
         if(proc[r]->val < least_bt && proc[r]->type == itype){
+            // second_bt = least_bt;
+            // second_bt_ind = least_bt_ind;
             least_bt = proc[r]->val;
             least_bt_ind = r;
         }
     }
+    // if(cpu.curr_pid == least_bt_ind && itype == 'I'){
+    //     least_bt_ind = second_bt_ind;
+    // }
+    
     // if(least_bt_ind != -1){
     //     printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, itype, least_bt_ind, least_bt);
     // }
@@ -108,8 +116,33 @@ void update(struct processNode** proc) {
     }
 }
 
+void printstuff(struct processNode** proc) {
+    FILE *fp;
+    fp = fopen("output.txt", "a");
+    fprintf(fp, "_________________ time = %d _____________________\n", time);
+    fprintf(fp, "in the cpu: %d time left for process %d\n", cpu.time_left, cpu.curr_pid);
+    for(int r=0; r<j; r++){
+        struct processNode *tail;
+        tail = proc[r];
+        if(tail != NULL){
+            while(tail->next != NULL)                   // get last element
+            {
+                fprintf(fp, "%d%c -> ", tail->val, tail->type);
+                tail = tail->next;
+            }
+            fprintf(fp, "%d%c -> ", tail->val, tail->type);
+        }
+        fprintf(fp, " NULL \n");
+    }
+    fclose(fp);
+    return;
+}
+
 int main(int argc, char *argv[])
 {
+    FILE *fpw;
+    fpw = fopen("output.txt", "w");
+    fclose(fpw);
     if(argc>2)                         // argc contains argument count. Argument count should be 2 for execution to proceed in this case
     {                                  // the arguments are stored using pointer array *argv[] 
         printf("too many arguments. enter proper input format.");
@@ -172,7 +205,7 @@ int main(int argc, char *argv[])
     int num_procs = j;
     // will scan thru instead of sorting ...
     // Our dictionary is now ready! ... (Might bring in priority queue if necessary)
-
+    
 
     // initialize cpu, io devices
     cpu.idle = 1;
@@ -181,6 +214,7 @@ int main(int argc, char *argv[])
     time = 0;
     // find_next(proc, 'C');
     while(!done){
+        printstuff(proc);
         int flag_pid = -1;
         if(cpu.idle){
             // select next process to run
@@ -223,7 +257,7 @@ int main(int argc, char *argv[])
             // progress current process in cpu by 1 time unit
             if(cpu.time_left == 1){
                 cpu.idle = 1;                           // cpu relinquished
-                processLog[cpu.curr_pid].status = 4;    // process completed
+                // processLog[cpu.curr_pid].status = 4;    // process completed
                 // save turnaround time
                 // processLog[cpu.curr_pid].turnaround_time = time - processLog[cpu.curr_pid].arrival_time + 1;
                 // printf("%d\n", processLog[cpu.curr_pid].turnaround_time);
@@ -234,7 +268,7 @@ int main(int argc, char *argv[])
         if(ioDevice.idle){
             // select next io process to run
             int pid_next = find_next(proc, 'I');
-            if(pid_next == -1 || pid_next == flag_pid){
+            if(pid_next == -1 || flag_pid == pid_next){
                 // printf("No IO processes waiting at time %d ...\n", time);
             } else {
                 if(pid_next != -1){
@@ -269,7 +303,11 @@ int main(int argc, char *argv[])
             }
             ioDevice.time_left--;
         }
-        
+        // if(flag_pid != -1) {
+        //     if(proc[flag_pid] == NULL) {
+        //         printf("Process %d finished at time %d\n", flag_pid, time);
+        //     }
+        // }
         flag_pid = -1;
         time++;
     }
