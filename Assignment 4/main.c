@@ -123,12 +123,14 @@ int find_next(struct processNode** proc, char itype) {
         if(proc[r] == NULL) {
             continue;
         }
-        if(proc[r]->val < least_bt && proc[r]->type == itype){
-            // second_bt = least_bt;
-            // second_bt_ind = least_bt_ind;
-            least_bt = proc[r]->val;
-            least_bt_ind = r;
-        }
+        // if((itype == 'C' && r != ioDevice.curr_pid) || (itype == 'I' && r != cpu.curr_pid)){
+            if(proc[r]->val < least_bt && proc[r]->type == itype && (time==0 || r != cpu.curr_pid)){ /////////
+                // second_bt = least_bt;
+                // second_bt_ind = least_bt_ind;
+                least_bt = proc[r]->val;
+                least_bt_ind = r;
+            }
+        // }
     }
     // if(cpu.curr_pid == least_bt_ind && itype == 'I'){
     //     least_bt_ind = second_bt_ind;
@@ -141,9 +143,6 @@ int find_next(struct processNode** proc, char itype) {
     // if(least_bt_ind != -1){
     //     printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, itype, least_bt_ind, least_bt);
     // }
-    if(itype == 'I'){
-        //
-    }
     return least_bt_ind;
 }
 
@@ -264,33 +263,34 @@ int main(int argc, char *argv[])
             int pid_next = find_next(proc, 'C');
             if(pid_next == -1){
                 printf("No CPU processes waiting at time %d ...\n", time);
-                break;
-            }
-            if(pid_next != -1){
-                printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, 'C', pid_next, proc[pid_next]->val);
-            }
-            cpu.curr_pid = pid_next;
-            cpu.idle = 0;
-            cpu.time_left = proc[pid_next]->val;
-            processLog[pid_next].status = 2; // running
+                // break;
+            } else {
+                if(pid_next != -1){
+                    printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, 'C', pid_next, proc[pid_next]->val);
+                }
+                cpu.curr_pid = pid_next;
+                cpu.idle = 0;
+                cpu.time_left = proc[pid_next]->val;
+                processLog[pid_next].status = 2; // running
 
-            // delete the node from the LL, and check if process first time. if yes, calc response time
-            if(processLog[pid_next].first_time == -1){
-                processLog[pid_next].first_time = time; // time when process first gets cpu time
-                printf("First time process %d got cpu is %d\n", pid_next, time);
-            }
-            
-            proc[pid_next] = proc[pid_next]->next;
-            flag_pid = pid_next; // pid at which cpu stuff just happened
-            
-            // update whatever happened in this 1 time unit
-            cpu.time_left--;
-            // printf("%d\n", cpu.time_left);
+                // delete the node from the LL, and check if process first time. if yes, calc response time
+                if(processLog[pid_next].first_time == -1){
+                    processLog[pid_next].first_time = time; // time when process first gets cpu time
+                    printf("First time process %d got cpu is %d\n", pid_next, time);
+                }
+                
+                proc[pid_next] = proc[pid_next]->next;
+                flag_pid = pid_next; // pid at which cpu stuff just happened
+                
+                // update whatever happened in this 1 time unit
+                cpu.time_left--;
+                // printf("%d\n", cpu.time_left);
 
-            if(cpu.time_left == 0) { // very rare case
-                cpu.idle = 1;
-                // processLog[pid_next].status = 4; // done
-                // processLog[pid_next].turnaround_time = 1;
+                if(cpu.time_left == 0) { // very rare case
+                    cpu.idle = 1;
+                    // processLog[pid_next].status = 4; // done
+                    // processLog[pid_next].turnaround_time = 1;
+                }
             }
         } else {
             // increment waiting time of all arrived processes
@@ -368,6 +368,20 @@ int main(int argc, char *argv[])
         // }
         flag_pid = -1;
         time++;
+        
+
+        // check if done
+        int is_done = 1;
+        for(int k=0; k<j; k++)
+        {
+            if(proc[k] != NULL){ // any null things
+                is_done = 0;
+                break;
+            }
+        }
+        if(is_done == 1){
+            done = 1;
+        }
     }
 
 
