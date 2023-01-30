@@ -38,12 +38,47 @@ struct io{
 };
 struct io ioDevice;
 
+struct ioQueueNode{
+    int pid;
+    struct ioQueueNode* next;
+};
+struct ioQueueNode *ioQueueHead = NULL;
+
 struct cp{
     int idle; // 0: idle, 1: active
     int curr_pid;
     int time_left;
 };
 struct cp cpu;
+
+void enqueue(int ipid)
+{
+    struct ioQueueNode *newnode = malloc(sizeof(struct ioQueueNode));
+    if(newnode != NULL)                             // check if memory is available
+    {
+        newnode->pid = ipid;
+        newnode->next = NULL;                       // initialise newnode->next to be NULL
+    }
+    else{
+        printf("\nMemory Insufficient!");
+        exit(4);
+    }
+    
+    if(ioQueueHead == NULL)                               // no-collision case
+    {
+        ioQueueHead = newnode;
+    }
+    else{                                           // collision case; insert at end of linked list
+        struct ioQueueNode *tail;
+        tail = ioQueueHead;
+        while(tail->next != NULL)                   // get last element
+        {
+            tail = tail->next;
+        }
+        tail->next = newnode;                       // place newnode after (old) tail
+        newnode->next = NULL;
+    }
+}
 
 void insert_node(struct processNode **head, int ival, char itype)
 {
@@ -70,7 +105,7 @@ void insert_node(struct processNode **head, int ival, char itype)
         {
             tail = tail->next;
         }
-        tail->next = newnode;                       // place newnode after (old) tail and before head
+        tail->next = newnode;                       // place newnode after (old) tail
         newnode->next = NULL;
     }
 }
@@ -98,10 +133,17 @@ int find_next(struct processNode** proc, char itype) {
     // if(cpu.curr_pid == least_bt_ind && itype == 'I'){
     //     least_bt_ind = second_bt_ind;
     // }
+
+    // if(time == 111) {
+    //     printf("%d %c ----\n", least_bt, itype);
+    // }
     
     // if(least_bt_ind != -1){
     //     printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, itype, least_bt_ind, least_bt);
     // }
+    if(itype == 'I'){
+        //
+    }
     return least_bt_ind;
 }
 
@@ -120,7 +162,7 @@ void printstuff(struct processNode** proc) {
     FILE *fp;
     fp = fopen("output.txt", "a");
     fprintf(fp, "_________________ time = %d _____________________\n", time);
-    fprintf(fp, "in the cpu: %d time left for process %d\n", cpu.time_left, cpu.curr_pid);
+    fprintf(fp, "in the cpu: %d time left for process %d, while io idle:%d \n", cpu.time_left, cpu.curr_pid, ioDevice.idle);
     for(int r=0; r<j; r++){
         struct processNode *tail;
         tail = proc[r];
@@ -253,10 +295,18 @@ int main(int argc, char *argv[])
         } else {
             // increment waiting time of all arrived processes
             update(proc);
-            flag_pid = cpu.curr_pid;
+            flag_pid = cpu.curr_pid; // flag_pid stores the pid of currently-in-cpu process
+            
             // progress current process in cpu by 1 time unit
             if(cpu.time_left == 1){
                 cpu.idle = 1;                           // cpu relinquished
+                if(proc[cpu.curr_pid] != NULL){ // next must be IO type
+                    // if(proc[cpu.curr_pid]->type == 'I'){
+                        printf("type: %c", proc[cpu.curr_pid]->type);
+                        enqueue(proc[cpu.curr_pid]->val); // enqueue
+                    // }
+                }
+                // flag_pid = -1;
                 // processLog[cpu.curr_pid].status = 4;    // process completed
                 // save turnaround time
                 // processLog[cpu.curr_pid].turnaround_time = time - processLog[cpu.curr_pid].arrival_time + 1;
@@ -267,32 +317,44 @@ int main(int argc, char *argv[])
         
         if(ioDevice.idle){
             // select next io process to run
-            int pid_next = find_next(proc, 'I');
-            if(pid_next == -1 || flag_pid == pid_next){
-                // printf("No IO processes waiting at time %d ...\n", time);
-            } else {
-                if(pid_next != -1){
-                    printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, 'I', pid_next, proc[pid_next]->val);
+            // int pid_next = find_next(proc, 'I');
+            if(ioQueueHead != NULL) {
+                int pid_next = ioQueueHead->pid; // get from queue
+                ioQueueHead = ioQueueHead->next;
+            
+                if(pid_next == -1 || flag_pid == pid_next){ // t=111, flagpid=3, pidnext is coming 3
+                    // printf("No IO processes waiting at time %d ...\n", time);
+                    if(time == 111){
+                        printf("%d %d\n", pid_next, flag_pid);
+                    }
+                } else {
+                    
+                    if(pid_next != -1){
+                        printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, 'I', pid_next, proc[pid_next]->val);
+                    }
+                    ioDevice.curr_pid = pid_next;
+                    ioDevice.idle = 0;
+                    ioDevice.time_left = proc[pid_next]->val;
+                    processLog[pid_next].status = 3; // blocked for io
+
+                    // delete the node from the LL
+                    proc[pid_next] = proc[pid_next]->next;
+                    
+
+                    // update whatever happened in this 1 time unit
+                    ioDevice.time_left--;
+                    // printf("%d\n", ioDevice.time_left);
+
+                    if(ioDevice.time_left == 0) { // common
+                        ioDevice.idle = 1;
+                        // processLog[pid_next].status = 4; // done
+                        // processLog[pid_next].turnaround_time = 1;
+                    } 
                 }
-                ioDevice.curr_pid = pid_next;
-                ioDevice.idle = 0;
-                ioDevice.time_left = proc[pid_next]->val;
-                processLog[pid_next].status = 3; // blocked for io
-
-                // delete the node from the LL
-                proc[pid_next] = proc[pid_next]->next;
-                
-
-                // update whatever happened in this 1 time unit
-                ioDevice.time_left--;
-                // printf("%d\n", ioDevice.time_left);
-
-                if(ioDevice.time_left == 0) { // common
-                    ioDevice.idle = 1;
-                    // processLog[pid_next].status = 4; // done
-                    // processLog[pid_next].turnaround_time = 1;
-                } 
+            } else{
+                // printf("ioQueue empty\n");
             }
+
         } else {
             if(ioDevice.time_left == 1){
                 ioDevice.idle = 1;                           // io relinquished
