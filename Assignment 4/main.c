@@ -300,12 +300,11 @@ int main(int argc, char *argv[])
             // progress current process in cpu by 1 time unit
             if(cpu.time_left == 1){
                 cpu.idle = 1;                           // cpu relinquished
-                if(proc[cpu.curr_pid] != NULL){ // next must be IO type
-                    // if(proc[cpu.curr_pid]->type == 'I'){
-                        printf("type: %c", proc[cpu.curr_pid]->type);
-                        enqueue(proc[cpu.curr_pid]->val); // enqueue
-                    // }
-                }
+                // if(proc[cpu.curr_pid] != NULL){ // next must be IO type /******************/
+                //     // if(proc[cpu.curr_pid]->next->type == 'I'){
+                //         enqueue(proc[cpu.curr_pid]->val); // enqueue
+                //     // }
+                // }
                 // flag_pid = -1;
                 // processLog[cpu.curr_pid].status = 4;    // process completed
                 // save turnaround time
@@ -317,43 +316,40 @@ int main(int argc, char *argv[])
         
         if(ioDevice.idle){
             // select next io process to run
-            // int pid_next = find_next(proc, 'I');
-            if(ioQueueHead != NULL) {
-                int pid_next = ioQueueHead->pid; // get from queue
-                ioQueueHead = ioQueueHead->next;
+            int pid_next = find_next(proc, 'I');
+            // int pid_next = ioQueueHead->pid; // get from queue
+            // ioQueueHead = ioQueueHead->next;
             
-                if(pid_next == -1 || flag_pid == pid_next){ // t=111, flagpid=3, pidnext is coming 3
-                    // printf("No IO processes waiting at time %d ...\n", time);
-                    if(time == 111){
-                        printf("%d %d\n", pid_next, flag_pid);
-                    }
-                } else {
-                    
-                    if(pid_next != -1){
-                        printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, 'I', pid_next, proc[pid_next]->val);
-                    }
-                    ioDevice.curr_pid = pid_next;
-                    ioDevice.idle = 0;
-                    ioDevice.time_left = proc[pid_next]->val;
-                    processLog[pid_next].status = 3; // blocked for io
-
-                    // delete the node from the LL
-                    proc[pid_next] = proc[pid_next]->next;
-                    
-
-                    // update whatever happened in this 1 time unit
-                    ioDevice.time_left--;
-                    // printf("%d\n", ioDevice.time_left);
-
-                    if(ioDevice.time_left == 0) { // common
-                        ioDevice.idle = 1;
-                        // processLog[pid_next].status = 4; // done
-                        // processLog[pid_next].turnaround_time = 1;
-                    } 
+            if(pid_next == -1 || flag_pid == pid_next){ // t=111, flagpid=3, pidnext is coming 3
+                // printf("No IO processes waiting at time %d ...\n", time);
+                if(time == 111){
+                    printf("%d %d\n", pid_next, flag_pid);
                 }
-            } else{
-                // printf("ioQueue empty\n");
+            } else {
+                
+                if(pid_next != -1){
+                    printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, 'I', pid_next, proc[pid_next]->val);
+                }
+                ioDevice.curr_pid = pid_next;
+                ioDevice.idle = 0;
+                ioDevice.time_left = proc[pid_next]->val;
+                processLog[pid_next].status = 3; // blocked for io
+
+                // delete the node from the LL
+                proc[pid_next] = proc[pid_next]->next;
+                
+
+                // update whatever happened in this 1 time unit
+                ioDevice.time_left--;
+                // printf("%d\n", ioDevice.time_left);
+
+                if(ioDevice.time_left == 0) { // common
+                    ioDevice.idle = 1;
+                    // processLog[pid_next].status = 4; // done
+                    // processLog[pid_next].turnaround_time = 1;
+                } 
             }
+
 
         } else {
             if(ioDevice.time_left == 1){
