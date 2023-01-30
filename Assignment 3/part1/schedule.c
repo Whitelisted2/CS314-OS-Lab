@@ -232,10 +232,6 @@ int do_start_scheduling(message *m_ptr)
 		cpu_proc[rmp->cpu] = CPU_DEAD;
 		pick_cpu(rmp);
 	}
-	
-	if (rmp->priority >= USER_Q){						// 
-		printf("PID %d swapped in\n", _ENDPOINT_P(rmp->endpoint));
-	}
 
 	if (rv != OK) {
 		printf("Sched: Error while scheduling process, kernel replied %d\n",
@@ -328,6 +324,10 @@ static int schedule_process(struct schedproc * rmp, unsigned flags)
 		new_quantum, new_cpu)) != OK) {
 		printf("PM: An error occurred when trying to schedule %d: %d\n",
 		rmp->endpoint, err);
+	}
+	
+	if (rmp->priority >= USER_Q){						// 
+		printf("Minix 200010003 : PID %d swapped in\n", _ENDPOINT_P(rmp->endpoint));
 	}
 
 	return err;
