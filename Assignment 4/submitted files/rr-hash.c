@@ -7,6 +7,7 @@
 int m;                                 // global variable for size of hash table
 int time;
 int j;
+int time_quantum = 2;
 #define MAX_PROCESSES 100
 #define MAX_BURSTS 100
 #define MAX_TIME 100000
@@ -28,6 +29,7 @@ struct processLogNode {
     int first_time;
     int last_time;
     int turnaround_time;
+    int in_cQueue;
     int response_time;
     int service_time;
     float penalty_ratio;
@@ -43,11 +45,12 @@ struct io{
 };
 struct io ioDevice;
 
-struct ioQueueNode{
+struct cpuQueueNode{
     int pid;
-    struct ioQueueNode* next;
+    int time_left;
+    struct cpuQueueNode* next;
 };
-struct ioQueueNode *ioQueueHead = NULL;
+struct cpuQueueNode *cpuQueueHead = NULL;
 
 struct cp{
     int idle; // 0: idle, 1: active
@@ -56,32 +59,34 @@ struct cp{
 };
 struct cp cpu;
 
-void enqueue(int ipid)
+void enqueue(int ipid, int ival)
 {
-    struct ioQueueNode *newnode = malloc(sizeof(struct ioQueueNode));
+    struct cpuQueueNode *newnode = malloc(sizeof(struct cpuQueueNode));
     if(newnode != NULL)                             // check if memory is available
     {
         newnode->pid = ipid;
         newnode->next = NULL;                       // initialise newnode->next to be NULL
+        newnode->time_left = ival;
     }
     else{
         printf("\nMemory Insufficient!");
         exit(4);
     }
     
-    if(ioQueueHead == NULL)                               // no-collision case
+    if(cpuQueueHead == NULL)                               // no-collision case
     {
-        ioQueueHead = newnode;
+        cpuQueueHead = newnode;
+        cpuQueueHead->next = cpuQueueHead;
     }
     else{                                           // collision case; insert at end of linked list
-        struct ioQueueNode *tail;
-        tail = ioQueueHead;
-        while(tail->next != NULL)                   // get last element
+        struct cpuQueueNode *tail;
+        tail = cpuQueueHead;
+        while(tail->next != cpuQueueHead)                   // get last element
         {
             tail = tail->next;
         }
-        tail->next = newnode;                       // place newnode after (old) tail
-        newnode->next = NULL;
+        tail->next = newnode;                       // place newnode after (old) tail, before head
+        newnode->next = cpuQueueHead;
     }
 }
 
@@ -116,53 +121,58 @@ void insert_node(struct processNode **head, int ival, char itype)
     }
 }
 
-int find_next(struct processNode** proc, char itype) {
-    int least_bt = INT_MAX;
-    int least_bt_ind = -1;
-    int least_age = INT_MAX;
-    // int second_bt = INT_MAX;
-    // int second_bt_ind = -1;
-    // go through all processes
-    for(int r=0; r<j; r++){
-        if(processLog[r].arrival_time > time){ // since we're given that the arrival times are in non-descending order
-            break;
-        }
-        if(proc[r] == NULL) {
-            continue;
-        }
-        // if(time == 1425){
-        //             printf("%d %c\n", proc[6]->val, itype);
-        //             if(itype == 'I'){
-        //                 exit(0);
-        //             }
-        //         }
-        // if((itype == 'C' && r != ioDevice.curr_pid) || (itype == 'I' && r != cpu.curr_pid)){
-            if(proc[r]->val < least_bt && proc[r]->type == itype && (time==0 || r != cpu.curr_pid)){ /////////
-                // second_bt = least_bt;
-                // second_bt_ind = least_bt_ind;
-                least_bt = proc[r]->val;
-                least_bt_ind = r;
-                if(itype == 'I' && proc[r]->age < least_age){
-                    least_age = proc[r]->age;
-                    least_bt = proc[r]->val;
-                    least_bt_ind = r;
-                }
-            }
-        // }
+void delete_begin()
+{
+    if(cpuQueueHead == NULL)                        // if CLL is empty
+    {
+        printf("\nThe List is EMPTY!\n");
     }
-    
-    // if(cpu.curr_pid == least_bt_ind && itype == 'I'){
-    //     least_bt_ind = second_bt_ind;
-    // }
+    else
+    {
+        struct cpuQueueNode *del;
+        del = cpuQueueHead;
+        if(cpuQueueHead == cpuQueueHead->next)              // if CLL has one node
+        {
+            cpuQueueHead->next = NULL;
+            free(del);
+        }
+        else
+        {
+            struct cpuQueueNode *tail;
+            tail = cpuQueueHead;
+            while(tail->next != cpuQueueHead)       // get element just before head in CLL (i.e. tail)
+            {
+                tail = tail->next;
+            }
+            cpuQueueHead = cpuQueueHead->next;              // change head, then make tail point to new head
+            tail->next = cpuQueueHead;
+            free(del);
+        }
+    }
+    return;
+}
 
-    // if(time == 111) {
-    //     printf("%d %c ----\n", least_bt, itype);
-    // }
-    
-    // if(least_bt_ind != -1){
-    //     printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, itype, least_bt_ind, least_bt);
-    // }
-    return least_bt_ind;
+int in_cQueue(int ipid){ // function to check presence of process in cQueue
+    if(cpuQueueHead == NULL){
+        return 0;
+    } else {
+        struct cpuQueueNode *tail;
+        tail = cpuQueueHead;
+        if(tail->pid == ipid){
+            return 1;
+        }
+        while(tail->next != cpuQueueHead)                   // get last element
+        {
+            tail = tail->next;
+            if(tail->pid == ipid){
+                return 1;
+            }
+        }
+        if(tail->pid == ipid){
+            return 1;
+        }
+        return 0;
+    }
 }
 
 void update(struct processNode** proc) {
@@ -170,13 +180,8 @@ void update(struct processNode** proc) {
         if(processLog[r].arrival_time > time){ // since we're given that the arrival times are in non-descending order
             break;
         }
-        // if(processLog[r].status == 1){ // neither running nor blocked.
-        //     processLog[r].waiting_time++; // update waiting time of all ready processes
-        // }
-        if(proc[r]!= NULL){
-            if(proc[r]->type == 'C'){
-                processLog[r].waiting_time++;
-            }
+        if(in_cQueue(r) && (r != cpu.curr_pid)){
+            processLog[r].waiting_time++; // if in cQueue but not running yet
         }
     }
 }
@@ -199,8 +204,27 @@ void printstuff(struct processNode** proc) {
         }
         fprintf(fp, " NULL \n");
     }
+    fprintf(fp," circular queue contains : ");
+    struct cpuQueueNode *tail;
+    tail = cpuQueueHead;
+    if(tail != NULL){
+        while(tail->next != cpuQueueHead){
+            fprintf(fp, "%d -> ", tail->pid);
+            tail = tail->next;
+        }
+        fprintf(fp, "%d \n", tail->pid);
+    } else{
+        fprintf(fp, "NULL \n");
+    }
     fclose(fp);
     return;
+}
+
+int find_min(int a, int b){
+    if(a<b){
+        return a;
+    }
+    return b;
 }
 
 int main(int argc, char *argv[])
@@ -282,99 +306,99 @@ int main(int argc, char *argv[])
     time = 0;
     // find_next(proc, 'C');
     while(!done){
-        
-        int flag_pid = -1;
-        if(cpu.idle){
-            // select next process to run
-            
-            int pid_next = find_next(proc, 'C');
-            if(pid_next == -1 || (pid_next == ioDevice.curr_pid && ioDevice.time_left>=1)){
-                printf("No CPU processes waiting at time %d ...\n", time);
-                // break;
-            } else {
-                if(pid_next != -1){
-                    printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, 'C', pid_next, proc[pid_next]->val);
+        // check all processes:
+        // they may be in circular queue (cpu ready/running)
+        // they may be in io (blocked)
+        // they may be ready for io (stagnant in LL)
+        // they may be cpu ready and not in cQueue (enqueue them)
+        // they may be completed fully
+        for(int k=0; k<j; k++){
+            if(proc[k] != NULL){
+                if(proc[k]->type == 'C' && !in_cQueue(k)){
+                    enqueue(k, proc[k]->val);
+                } // else all cpu ready processes are in cQueue
+                if(proc[k]->type == 'I' && !in_cQueue(k)){
+                    proc[k]->age++;
                 }
-                cpu.curr_pid = pid_next;
-                cpu.idle = 0;
-                cpu.time_left = proc[pid_next]->val;
-                processLog[pid_next].status = 2; // running
+            }
+        }
 
-                // delete the node from the LL, and check if process first time. if yes, calc response time
+        // this is almost round robin (very very tiny things that seem to differ ...)
+        if(cpu.idle){
+            // allot a process for a time quantum, by picking from the circular queue
+            if(cpuQueueHead == NULL){
+                printf("No CPU processes in cQueue ...\n");
+            } else{
+                int pid_next = cpuQueueHead->pid;
+                printf("At time %d , %c job pid: %d\n", time, 'C', pid_next);
+                cpu.curr_pid = pid_next;
+                cpu.time_left = find_min(time_quantum, cpuQueueHead->time_left);
+                cpuQueueHead->time_left -= cpu.time_left; // cpu takes some time off of the head
+                proc[cpu.curr_pid]->val -= cpu.time_left;
+                cpu.idle = 0;
+                processLog[pid_next].status = 2; //running
+
+
                 if(processLog[pid_next].first_time == -1){
                     processLog[pid_next].first_time = time; // time when process first gets cpu time
                     printf("First time process %d got cpu is %d\n", pid_next, time);
                 }
-                
-                proc[pid_next] = proc[pid_next]->next;
-                flag_pid = pid_next; // pid at which cpu stuff just happened
-                
-                // update whatever happened in this 1 time unit
                 cpu.time_left--;
-                // printf("%d\n", cpu.time_left);
 
-                if(cpu.time_left == 0) { // very rare case
+                if(cpu.time_left == 0){
                     cpu.idle = 1;
-                    // processLog[pid_next].status = 4; // done
-                    // processLog[pid_next].turnaround_time = 1;
+                    processLog[cpu.curr_pid].status = 1; // ready
+                    
+                    if(cpuQueueHead->time_left == 0){ // if head time left is 0, get out of cQueue
+                        delete_begin();
+                        proc[cpu.curr_pid] = proc[cpu.curr_pid]->next; // get out of the LL also
+                    }
+                    // cpuQueueHead = cpuQueueHead->next; // for next pass
+                    // cpu.curr_pid = -1;
                 }
             }
+            // keep time_left as time_quantum
         } else {
-            // increment waiting time of all arrived processes
+            // update all processes waiting in the circular queue
             update(proc);
-            
-            flag_pid = cpu.curr_pid; // flag_pid stores the pid of currently-in-cpu process
-            
-            // progress current process in cpu by 1 time unit
-            if(cpu.time_left == 1){
-                cpu.idle = 1;                           // cpu relinquished
-                processLog[cpu.curr_pid].status = 1;
-                cpu.curr_pid = -1;
-                // if(proc[cpu.curr_pid] != NULL){ // next must be IO type /******************/
-                //     // if(proc[cpu.curr_pid]->next->type == 'I'){
-                //         enqueue(proc[cpu.curr_pid]->val); // enqueue
-                //     // }
-                // }
-                // flag_pid = -1;
-                // processLog[cpu.curr_pid].status = 4;    // process completed
-                // save turnaround time
-                // processLog[cpu.curr_pid].turnaround_time = time - processLog[cpu.curr_pid].arrival_time + 1;
-                // printf("%d\n", processLog[cpu.curr_pid].turnaround_time);
-            }
+            // update time left for the cpu task
             cpu.time_left--;
-        }
-        
-        if(ioDevice.idle){
-            // select next io process to run
-            int pid_next = find_next(proc, 'I');
-            
-            // int pid_next = ioQueueHead->pid; // get from queue
-            // ioQueueHead = ioQueueHead->next;
-            
-            if(pid_next == -1 || flag_pid == pid_next){ // t=111, flagpid=3, pidnext is coming 3
-                // printf("No IO processes waiting at time %d ...\n", time);
-
-                // if(time == 111){
-                //     printf("%d %d\n", pid_next, flag_pid);
-                // }
-            } else {
+            // if cpu task ends, make it idle, remove the process from cQueue
+            if(cpu.time_left == 0){
+                cpu.idle = 1;
+                processLog[cpu.curr_pid].status = 1; // ready
                 
-                if(pid_next != -1){
-                    printf("At time %d , shortest %c job pid: %d , with burst %d\n", time, 'I', pid_next, proc[pid_next]->val);
+                if(cpuQueueHead->time_left == 0){ // if head time left is 0, get out of cQueue
+                    delete_begin();
+                    proc[cpu.curr_pid] = proc[cpu.curr_pid]->next; // get out of the LL also
                 }
+                cpuQueueHead = cpuQueueHead->next; // for next pass
+                // cpu.curr_pid = -1;
+            }
+        }
+
+        if(ioDevice.idle){
+            // allot an IO process, such that cpu burst of same pid is not in circular queue
+            int min_age = INT_MAX;
+            int pid_next = -1;
+            for(int k=0; k<j; k++){
+                if(k!=cpu.curr_pid && proc[k]->type == 'I'){
+                    if(proc[k]->age < min_age){
+                        min_age = proc[k]->age;
+                        pid_next = k;
+                    }
+                }
+            }
+            if(pid_next == -1){
+                // no io stuff waiting
+            } else {
+                // do io
+                printf("\n");
                 ioDevice.curr_pid = pid_next;
                 ioDevice.idle = 0;
                 ioDevice.time_left = proc[pid_next]->val;
-                processLog[pid_next].status = 3; // blocked for io
-
-                // delete the node from the LL
-                proc[pid_next] = proc[pid_next]->next;
-                
-
-                // update whatever happened in this 1 time unit
+                processLog[pid_next].status = 3; // blocked
                 ioDevice.time_left--;
-                // printf("%d\n", ioDevice.time_left);
-
                 if(ioDevice.time_left == 0) { // common
                     ioDevice.idle = 1;
                     // processLog[pid_next].status = 4; // done
@@ -382,48 +406,19 @@ int main(int argc, char *argv[])
                 } 
             }
 
-
         } else {
-            if(ioDevice.time_left == 1){
-                ioDevice.idle = 1;                           // io relinquished
-                processLog[ioDevice.curr_pid].status = 1;    // process ready
-                // save turnaround time
-                // processLog[cpu.curr_pid].turnaround_time = time - processLog[cpu.curr_pid].arrival_time + 1;
-                // printf("%d\n", processLog[cpu.curr_pid].turnaround_time);
-            }
+            // update time for process in IO
             ioDevice.time_left--;
+            if(ioDevice.time_left == 0){
+                ioDevice.idle = 1;
+                processLog[ioDevice.curr_pid].status = 1; // ready
+            }
+            // if io process done, then change status of the pid to allow cpu
         }
-        // if(flag_pid != -1) {
-        //     if(proc[flag_pid] == NULL) {
-        //         printf("Process %d finished at time %d\n", flag_pid, time);
-        //     }
-        // }
+
         printstuff(proc);
 
-        flag_pid = -1;
         time++;
-        
-        // check if done
-        int is_done = 1;
-        for(int k=0; k<j; k++)
-        {
-            if(proc[k] != NULL){ // any null things
-                is_done = 0;
-                if(proc[k]->type == 'I'){
-                    proc[k]->age++;
-                }
-                // break;
-            } else{
-                if(processLog[k].last_time < 0){
-                    processLog[k].last_time = time-1+cpu.time_left; // record when a process is done
-                    printf("Process %d completed at time %d\n", k, time-1+cpu.time_left);
-                }
-                processLog[k].status = 4;
-            }
-        }
-        if(is_done == 1){
-            done = 1;
-        }
     }
 
     for(int k=0; k<j; k++){
