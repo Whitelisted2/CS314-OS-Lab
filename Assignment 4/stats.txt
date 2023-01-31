@@ -1,0 +1,48 @@
+______________________________________
+Process PID 0 :
+Turnaround Time = 1223
+Waiting Time = 792
+Response Time = 0
+Penalty Ratio = 0.347073
+______________________________________
+Process PID 1 :
+Turnaround Time = 1211
+Waiting Time = 862
+Response Time = 572
+Penalty Ratio = 0.283458
+______________________________________
+Process PID 2 :
+Turnaround Time = 660
+Waiting Time = 370
+Response Time = 181
+Penalty Ratio = 0.440242
+______________________________________
+Process PID 3 :
+Turnaround Time = 549
+Waiting Time = 352
+Response Time = 107
+Penalty Ratio = 0.363472
+______________________________________
+Process PID 4 :
+Turnaround Time = 118
+Waiting Time = 108
+Response Time = 95
+Penalty Ratio = 0.107438
+______________________________________
+Process PID 5 :
+Turnaround Time = 101
+Waiting Time = 96
+Response Time = 97
+Penalty Ratio = 0.049505
+______________________________________
+Process PID 6 :
+Turnaround Time = 1418
+Waiting Time = 1187
+Response Time = 1214
+Penalty Ratio = 0.147270
+______________________________________
+System Averages
+Avg Turnaround Time = 754.285706
+Avg Waiting Time = 538.142883
+Avg Response Time = 323.714294
+Avg Penalty Ratio = 0.248351

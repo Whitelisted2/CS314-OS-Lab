@@ -1,0 +1,69 @@
+At time 0 , shortest C job pid: 0 , with burst 100
+First time process 0 got cpu is 0
+At time 100 , shortest C job pid: 4 , with burst 3
+First time process 4 got cpu is 100
+At time 100 , shortest I job pid: 0 , with burst 2
+At time 103 , shortest C job pid: 5 , with burst 5
+First time process 5 got cpu is 103
+At time 103 , shortest I job pid: 4 , with burst 2
+Process 5 completed at time 107
+At time 108 , shortest C job pid: 4 , with burst 3
+At time 111 , shortest C job pid: 3 , with burst 10
+First time process 3 got cpu is 111
+At time 111 , shortest I job pid: 4 , with burst 2
+At time 121 , shortest C job pid: 4 , with burst 3
+At time 121 , shortest I job pid: 3 , with burst 2
+Process 4 completed at time 123
+At time 124 , shortest C job pid: 3 , with burst 60
+At time 184 , shortest C job pid: 2 , with burst 70
+First time process 2 got cpu is 184
+At time 184 , shortest I job pid: 3 , with burst 2
+At time 254 , shortest C job pid: 3 , with burst 30
+At time 254 , shortest I job pid: 2 , with burst 2
+At time 284 , shortest C job pid: 2 , with burst 70
+At time 284 , shortest I job pid: 3 , with burst 3
+At time 354 , shortest C job pid: 3 , with burst 70
+At time 354 , shortest I job pid: 2 , with burst 2
+At time 424 , shortest C job pid: 2 , with burst 40
+At time 424 , shortest I job pid: 3 , with burst 2
+At time 464 , shortest C job pid: 3 , with burst 10
+At time 464 , shortest I job pid: 2 , with burst 3
+At time 474 , shortest C job pid: 2 , with burst 70
+At time 474 , shortest I job pid: 3 , with burst 2
+At time 544 , shortest C job pid: 3 , with burst 10
+At time 544 , shortest I job pid: 2 , with burst 2
+Process 3 completed at time 553
+At time 554 , shortest C job pid: 2 , with burst 20
+At time 574 , shortest C job pid: 1 , with burst 80
+First time process 1 got cpu is 574
+At time 574 , shortest I job pid: 2 , with burst 2
+At time 654 , shortest C job pid: 2 , with burst 10
+At time 654 , shortest I job pid: 1 , with burst 2
+Process 2 completed at time 663
+At time 664 , shortest C job pid: 1 , with burst 80
+At time 744 , shortest C job pid: 0 , with burst 90
+At time 744 , shortest I job pid: 1 , with burst 2
+At time 834 , shortest C job pid: 1 , with burst 50
+At time 834 , shortest I job pid: 0 , with burst 2
+At time 884 , shortest C job pid: 0 , with burst 80
+At time 884 , shortest I job pid: 1 , with burst 3
+At time 964 , shortest C job pid: 1 , with burst 70
+At time 964 , shortest I job pid: 0 , with burst 3
+At time 1034 , shortest C job pid: 0 , with burst 70
+At time 1034 , shortest I job pid: 1 , with burst 2
+At time 1104 , shortest C job pid: 1 , with burst 40
+At time 1104 , shortest I job pid: 0 , with burst 2
+At time 1144 , shortest C job pid: 0 , with burst 60
+At time 1144 , shortest I job pid: 1 , with burst 2
+At time 1204 , shortest C job pid: 1 , with burst 10
+At time 1204 , shortest I job pid: 0 , with burst 2
+Process 1 completed at time 1213
+At time 1214 , shortest C job pid: 0 , with burst 10
+Process 0 completed at time 1223
+At time 1224 , shortest C job pid: 6 , with burst 200
+First time process 6 got cpu is 1224
+No CPU processes waiting at time 1424 ...
+At time 1424 , shortest I job pid: 6 , with burst 2
+No CPU processes waiting at time 1425 ...
+At time 1426 , shortest C job pid: 6 , with burst 3
+Process 6 completed at time 1428
