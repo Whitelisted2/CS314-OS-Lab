@@ -101,7 +101,7 @@ int do_noquantum(message *m_ptr)
 
 	rmp = &schedproc[proc_nr_n];
 	if (rmp->priority < MIN_USER_Q) {
-		rmp->priority -= 1; /* lower priority */
+		rmp->priority -= 1; // lower priority
 	}
 
 	if ((rv = schedule_process_local(rmp)) != OK) {
@@ -361,7 +361,7 @@ static void balance_queues(minix_timer_t *tp)
 	for (proc_nr=0, rmp=schedproc; proc_nr < NR_PROCS; proc_nr++, rmp++) {
 		if (rmp->flags & IN_USE) {
 			if (rmp->priority > rmp->max_priority) {
-                //should not increase priority, in order to implement pseudo FIFO
+                // should not increase priority, in order to implement pseudo FIFO
 				// rmp->priority -= 1; /* increase priority */
 				schedule_process_local(rmp);
 			}

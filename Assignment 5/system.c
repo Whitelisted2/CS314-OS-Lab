@@ -632,7 +632,8 @@ int sched_proc(struct proc *p,
 		return(EINVAL);
   
   //if there are no quantum related issues, then print time quantum it has and used
-printf("Roll Numbers: 2000100- 03 & 12\nTime Quantum: %d, Time Quantum Executed: %d Endpoint: %d\n", p->p_quantum_size_ms, p->p_quantum_size_ms - cpu_time_2_ms(p->p_cpu_time_left),p->p_endpoint);
+  printf("R.No.:2000100+03/12\nTime Quantum: %d, Time Quantum Executed: %d Endpoint: %d\n", p->p_quantum_size_ms, p->p_quantum_size_ms - cpu_time_2_ms(p->p_cpu_time_left), p->p_endpoint);
+
 #ifdef CONFIG_SMP
 	if ((cpu < 0 && cpu != -1) || (cpu > 0 && (unsigned) cpu >= ncpus))
 		return(EINVAL);
