@@ -43,9 +43,17 @@ void LRU(int pages, int frames, vector<int> requests)
 
 int main(int argc, char *argv[])
 {
+    if (argc != 5) {
+        cout << "Invalid number of parameters." << endl;
+        exit(2);
+    }
     int pages = atoi(argv[1]);
     int frames = atoi(argv[2]);
     int blocks = atoi(argv[3]);
+    if(blocks < pages){
+        cout<<"Invalid parameter set. Want x < z in the input (x, y, z)"<<endl;
+        exit(1);
+    }
     string filename = argv[4];
     vector<int> requests;
     ifstream infile(filename);
