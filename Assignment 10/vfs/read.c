@@ -276,18 +276,18 @@ int read_write(struct fproc *rfp, int rw_flag, struct filp *f,
 	}
 
 	f->filp_pos = position;
-	
+
 	// Lab 10
 	struct vmnt *v_mp;
 	v_mp = find_vmnt(vp->v_fs_e);
 	if (rw_flag == WRITING && strcmp(v_mp->m_mount_path, "/home") == 0)
 	{
-		printf("Minix3: File Write: %llu; nbytes = %zu; offset = %llu\n", vp->v_inode_nr, size, position);
+		printf("Minix3 [R.No.03+12]: File Write: %llu; nbytes = %zu; offset = %llu\n", vp->v_inode_nr, size, position);
 	}
 
 	if (rw_flag == READING && strcmp(v_mp->m_mount_path, "/home") == 0)
 	{
-		printf("Minix3: File Read: %llu; nbytes = %zu; offset = %llu\n", vp->v_inode_nr, size, position);
+		printf("Minix3 [R.No.03+12]: File Read: %llu; nbytes = %zu; offset = %llu\n", vp->v_inode_nr, size, position);
 	}
 	// upto here
 

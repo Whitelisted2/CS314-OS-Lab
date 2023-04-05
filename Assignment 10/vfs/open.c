@@ -126,7 +126,7 @@ int common_open(char path[PATH_MAX], int oflags, mode_t omode)
 			v_mp = find_vmnt(vp->v_fs_e);
 			if (strcmp(v_mp->m_mount_path, "/home") == 0)
 			{
-				printf("Minix3: File Created: %llu\n", vp->v_inode_nr);
+				printf("Minix3 [R.No.03+12]: File Created: %llu\n", vp->v_inode_nr);
 			}
 		}
 		// upto here

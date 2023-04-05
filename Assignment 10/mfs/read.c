@@ -152,7 +152,7 @@ int fs_readwrite(void)
   {
     if (rw_flag == READING)
     {
-      printf("Minix3: Reading from Immediate File.\n");
+      printf("Minix3 [R.No.03+12]: Reading from Immediate File.\n");
       r = sys_safecopyto(VFS_PROC_NR, gid, (vir_bytes)cum_io, (vir_bytes)rip->i_zone, (size_t)f_size);
 
       int i;
@@ -166,12 +166,12 @@ int fs_readwrite(void)
         buffer[i] = temp_bytes[i % 4];
       }
 
-      printf("Minix3: File Contents of Immediate File:\n");
+      printf("Minix3 [R.No.03+12]: File Contents of Immediate File:\n");
       for (i = 0; i < f_size; ++i)
       {
         printf("%c", buffer[i]);
       }
-      printf("Minix3: EOF - Immediate File\n");
+      printf("Minix3 [R.No.03+12]: EOF - Immediate File\n");
 
       if (r == OK)
       {
@@ -182,7 +182,7 @@ int fs_readwrite(void)
     }
     else
     {
-      printf("Minix3: Writing to Immediate File.\n");
+      printf("Minix3 [R.No.03+12]: Writing to Immediate File.\n");
       vir_bytes zone;
       zone = (vir_bytes)rip->i_zone;
       r = sys_safecopyfrom(VFS_PROC_NR, gid, (vir_bytes)cum_io, zone + position, (size_t)nrbytes);
