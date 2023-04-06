@@ -1,5 +1,7 @@
 #!/bin/bash
 
 make buddy;
-./buddy.o input.txt;
+if [[ $# -eq 2 ]]; then
+    
+./buddy.o $1 > output.txt;
 make clean;

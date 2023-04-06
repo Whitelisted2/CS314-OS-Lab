@@ -1,4 +1,4 @@
-buddy: buddy.c
-	@gcc buddy.c -lm -o buddy.o
+buddy: buddy.cpp
+	@g++ buddy.cpp -o buddy.o
 clean:
 	@rm -rf buddy.o
