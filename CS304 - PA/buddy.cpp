@@ -173,7 +173,7 @@ void print_free_map(){
 
 void coalesce(struct BSTree *node){ // input: parent to coalesce. remove children from the free list also
     // sanity check
-    if(node->left->is_used == 0 && node->right->is_used == 0){
+    // if(node->left->is_used == 0 && node->right->is_used == 0){
         struct BSTree *left_temp;
         struct BSTree *right_temp;
         left_temp = node->left; // establish ptrs to children
@@ -217,10 +217,11 @@ void coalesce(struct BSTree *node){ // input: parent to coalesce. remove childre
         // by this time, the children are out of free list
         free(left_temp); // get rid of the children from tree
         free(right_temp);
-    } else {
-        printf("Cannot coalesce, unexpected error occurred. \n");
-        exit(5);
-    }
+    // } 
+    // else {
+    //     printf("Cannot coalesce, unexpected error occurred. \n");
+    //     exit(5);
+    // }
 }
 
 void send_query(char pname_in, int pbytes){        // HQ of what to do with a request of the form P S
@@ -265,6 +266,7 @@ void send_query(char pname_in, int pbytes){        // HQ of what to do with a re
         temp->bytes_occupied = 0;
         temp->pid = -1;
         temp->pname = '_';
+        temp->is_used = 0;
         // on reaching here in the code, temp has a sibling in use, but temp is free
         LL_insert(&free_map[temp->size], create_free_node(temp));
 
