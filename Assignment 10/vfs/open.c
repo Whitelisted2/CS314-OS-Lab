@@ -160,6 +160,7 @@ int common_open(char path[PATH_MAX], int oflags, mode_t omode)
 		/* Opening reg. files, directories, and special files differ */
 		switch (vp->v_mode & S_IFMT) {
 		   case S_IFREG:
+		   //add label for immediate
 		   case S_IFIMM: // Lab-10
 			/* Truncate regular file if O_TRUNC. */
 			if (oflags & O_TRUNC) {
