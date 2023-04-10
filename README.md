@@ -29,6 +29,6 @@ Assignments that are based on the Minix3 Operating System are prefixed with `Min
     - File Operations: Create, Read, Write, Delete
 10. `Minix3` Immediate Files
     - Implementation for files upto 32B
-
+11. (PA-CS304) Implementation of Buddy Allocation Algorithm
 
 > Strategy without tactics is the slowest route to victory. Tactics without strategy is the noise before defeat. - Sun Tzu, The Art of War
